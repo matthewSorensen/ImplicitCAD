@@ -6,6 +6,10 @@ import Data.HashMap.Strict
 import Prelude hiding (lookup)
 import Graphics.Implicit.Definitions
 import Data.List (mapAccumL)
+import Control.Monad.State
+import Data.Sequence hiding (empty)
+import Control.Monad (mapM)
+import Data.Monoid
 
 data Sp3 = P3 !Float !Float !Float
          deriving(Show,Eq)
@@ -15,28 +19,27 @@ instance Hashable Sp3 where
     hashWithSalt s (P3 x y z) = s `hashWithSalt` x `hashWithSalt` y `hashWithSalt` z
 
 data Tri = Tri !Int !Int !Int
+         deriving(Show,Eq)
 
-type VertexSet = (HashMap Sp3 Int, Int)
+type VSet = (HashMap Sp3 Int, Int, Seq Sp3)
 
-lookupPoint :: ℝ3 -> VertexSet -> (VertexSet, Int)
-lookupPoint (x,y,z) (h,u) = let p = P3 x y z
-                                      in case lookup p h of
-                                           Nothing -> ((insert p u h, u+1), u)
-                                           Just i -> ((h,u), i)
+lookupPoint :: ℝ3 -> State VSet Int
+lookupPoint (x,y,z) = do
+  let p = P3 x y z
+  (h,u,l) <- get
+  case lookup p h of
+    Just i  -> return i
+    Nothing -> do
+      put $! (insert p u h, u+1, l |> p)
+      return u
 
-dedupTri :: VertexSet -> Triangle -> (VertexSet, Tri)
-dedupTri s (a,b,c) = let (s',a') = lookupPoint a s
-                         (s'',b') = lookupPoint b s'
-                         (s''',c') = lookupPoint c s''
-                     in (s''',Tri a' b' c')
+dedupTri :: Triangle -> State VSet Tri
+dedupTri (a,b,c) = do
+  a' <- lookupPoint a
+  b' <- lookupPoint b
+  c' <- lookupPoint c
+  return $! Tri a' b' c'
 
-deduplicate :: [Triangle] -> ([Sp3],[Tri])
-deduplicate = undefined $ mapAccumL dedupTri (empty,0)
-
-
--- Then we need to do the tricky part - getting an order list of all of the vertexes.
--- So, what's better?
--- * lazily emitting the list in lookupPoint (+ reverse, or using |> for sequences?)
--- * sorting the the VertexSet's toList
--- * building an ordered set based on the VertexSet's toList
--- Honestly, we just have to implement all of them.
+deduplicate :: [Triangle] -> (Seq Sp3, [Tri])
+deduplicate t = shuffle $ runState (mapM dedupTri t) (mempty,0,mempty)
+    where shuffle (l,(_,_,p)) = (p,l)

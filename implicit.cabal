@@ -22,6 +22,8 @@ Library
         hashmap,
         parallel,
         containers,
+        unordered-containers,
+        hashable,
         plugins,
         deepseq,
         text,
