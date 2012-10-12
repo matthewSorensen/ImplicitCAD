@@ -3,7 +3,7 @@
 module Graphics.Implicit.Export.Additive where
 
 import Graphics.Implicit.Definitions
-
+import Graphics.Implicit.Export.TextBuilderUtils
 
 import Data.Hashable
 import Data.HashMap.Strict
@@ -14,7 +14,7 @@ import Data.Traversable (mapM)
 import Data.Monoid (mempty)
 import Text.Blaze.Internal
 
-import Text.Blaze.Renderer.Pretty
+import Text.Blaze.Renderer.Text
 
 data Point3 = P3 !Float !Float !Float
               deriving(Show,Eq)
@@ -82,3 +82,6 @@ file tri verts =
     parent "amf" $ parent "object" $ parent "mesh" $ do
       vertices verts
       volume tri
+
+amf :: [NormedTriangle] -> Text
+amf = renderMarkup . uncurry file . deduplicate

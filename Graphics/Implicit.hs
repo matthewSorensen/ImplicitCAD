@@ -30,6 +30,7 @@ module Graphics.Implicit(
 	-- Export
 	writeSVG,
 	writeSTL,
+	writeAMF,
 	writeBinSTL,
 	writeOBJ,
 	writeTHREEJS,
@@ -54,6 +55,7 @@ import Graphics.Implicit.Definitions
 
 writeSVG    = Export.writeSVG   :: ℝ -> FilePath -> SymbolicObj2 -> IO ()
 writeSTL    = Export.writeSTL   :: ℝ -> FilePath -> SymbolicObj3 -> IO ()
+writeAMF    = Export.writeAMF   :: ℝ -> FilePath -> SymbolicObj3 -> IO ()
 writeBinSTL = Export.writeBinSTL   :: ℝ -> FilePath -> SymbolicObj3 -> IO ()
 writeOBJ    = Export.writeOBJ   :: ℝ -> FilePath -> SymbolicObj3 -> IO ()
 writeSCAD2  = Export.writeSCAD2 :: ℝ -> FilePath -> SymbolicObj2 -> IO ()

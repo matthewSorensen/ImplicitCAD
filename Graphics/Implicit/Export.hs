@@ -24,10 +24,11 @@ import qualified Graphics.Implicit.Export.PolylineFormats as PolylineFormats
 import qualified Graphics.Implicit.Export.TriangleMeshFormats as TriangleMeshFormats
 import qualified Graphics.Implicit.Export.NormedTriangleMeshFormats as NormedTriangleMeshFormats
 import qualified Graphics.Implicit.Export.SymbolicFormats as SymbolicFormats
+import qualified Graphics.Implicit.Export.Additive as Additive
 
 import qualified Codec.Picture as ImageFormatCodecs
 
--- Write an object in a given formet...
+-- Write an object in a given format...
 
 writeObject :: (DiscreteAproxable obj aprox) => 
         ℝ                   -- ^ Resolution
@@ -62,6 +63,8 @@ formatObject res format = format . discreteAprox res
 writeSVG res = writeObject res PolylineFormats.svg
 
 writeSTL res = writeObject res  TriangleMeshFormats.stl
+
+writeAMF res = writeObject res  Additive.amf
 
 writeBinSTL res file obj = LBS.writeFile file $ TriangleMeshFormats.binaryStl $ discreteAprox res obj
 
