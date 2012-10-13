@@ -13,8 +13,10 @@ import Data.Sequence
 import Data.Traversable (mapM)
 import Data.Monoid (mempty)
 import Text.Blaze.Internal
-
-import Text.Blaze.Renderer.Text
+import Text.Blaze (toMarkup)
+import Text.Blaze.Renderer.Utf8
+import Data.ByteString.Lazy
+import Codec.Compression.GZip (compress)
 
 data Point3 = P3 !Float !Float !Float
               deriving(Show,Eq)
@@ -52,8 +54,6 @@ lookupNormedPoint (p,n) = do
       put $! (insert point (normal,uni) hash, uni+1, l |> (point,normal))
       return uni
 
--- Welcome to gross suboptimality!
-
 parent t x = customParent (textTag t) x
 
 vertices :: Seq (Point3,Point3) -> Markup
@@ -61,21 +61,21 @@ vertices = parent "vertices" . fmap (const ()) . mapM vertex
     where vertex ((P3 x y z),(P3 nx ny nz))
               = parent "vertex" $ do
                   parent "coordinates" $ do
-                                    parent "x" $ string $ show x
-                                    parent "y" $ string $ show y
-                                    parent "z" $ string $ show z
+                                    parent "x" $ toMarkup x
+                                    parent "y" $ toMarkup y
+                                    parent "z" $ toMarkup z
                   parent "normal" $ do
-                                    parent "nx" $ string $ show nx
-                                    parent "ny" $ string $ show ny
-                                    parent "nz" $ string $ show nz
+                                    parent "nx" $ toMarkup nx
+                                    parent "ny" $ toMarkup ny
+                                    parent "nz" $ toMarkup nz
        
 volume :: [Tri] -> Markup
 volume = parent "volume" . mapM_ triangle
     where triangle (Tri a b c) 
               = parent "triangle" $ do
-                  parent "v1" $ string $ show a
-                  parent "v2" $ string $ show b
-                  parent "v3" $ string $ show c
+                  parent "v1" $ toMarkup a
+                  parent "v2" $ toMarkup b
+                  parent "v3" $ toMarkup c
 
 file :: [Tri] -> Seq (Point3,Point3) -> Markup
 file tri verts = 
@@ -83,5 +83,5 @@ file tri verts =
       vertices verts
       volume tri
 
-amf :: [NormedTriangle] -> Text
-amf = renderMarkup . uncurry file . deduplicate
+amf :: [NormedTriangle] -> ByteString
+amf = compress . renderMarkup . uncurry file . deduplicate

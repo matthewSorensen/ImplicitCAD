@@ -25,6 +25,7 @@ import qualified Graphics.Implicit.Export.TriangleMeshFormats as TriangleMeshFor
 import qualified Graphics.Implicit.Export.NormedTriangleMeshFormats as NormedTriangleMeshFormats
 import qualified Graphics.Implicit.Export.SymbolicFormats as SymbolicFormats
 import qualified Graphics.Implicit.Export.Additive as Additive
+import qualified Graphics.Implicit.Export.OldAdditive as OldAdditive
 
 import qualified Codec.Picture as ImageFormatCodecs
 
@@ -64,9 +65,9 @@ writeSVG res = writeObject res PolylineFormats.svg
 
 writeSTL res = writeObject res  TriangleMeshFormats.stl
 
-writeAMF res = writeObject res  Additive.amf
-
 writeBinSTL res file obj = LBS.writeFile file $ TriangleMeshFormats.binaryStl $ discreteAprox res obj
+
+writeAMF res file obj = LBS.writeFile file $ Additive.amf $ discreteAprox res obj
 
 writeOBJ res = writeObject res  NormedTriangleMeshFormats.obj
 writeTHREEJS res = writeObject res  TriangleMeshFormats.jsTHREE

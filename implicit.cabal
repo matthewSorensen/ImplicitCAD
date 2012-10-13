@@ -32,7 +32,9 @@ Library
         bytestring,
         blaze-builder,
         storable-endian,
-        JuicyPixels
+        JuicyPixels,
+        zlib,
+        blaze-markup
         
     ghc-options:
         -O2 -optc-O3
