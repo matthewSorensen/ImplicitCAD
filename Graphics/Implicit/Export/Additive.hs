@@ -3,19 +3,17 @@
 module Graphics.Implicit.Export.Additive where
 
 import Graphics.Implicit.Definitions
-import Graphics.Implicit.Export.TextBuilderUtils
-
 import Data.Hashable
 import Data.HashMap.Strict
 import Prelude hiding (lookup,mapM)
 import Control.Monad.State hiding (mapM)
-import Data.Sequence
+import Data.Sequence 
 import Data.Traversable (mapM)
-import Data.Monoid (mempty)
+import Data.Monoid
 import Text.Blaze.Internal
 import Text.Blaze (toMarkup)
 import Text.Blaze.Renderer.Utf8
-import Data.ByteString.Lazy
+import Data.ByteString.Lazy.Char8 (ByteString)
 import Codec.Compression.GZip (compress)
 
 data Point3 = P3 !Float !Float !Float
@@ -56,26 +54,39 @@ lookupNormedPoint (p,n) = do
 
 parent t x = customParent (textTag t) x
 
+xt p =  Parent "x" "<x" "</x>" $ toMarkup p
+yt p =  Parent "y" "<y" "</y>" $ toMarkup p
+zt p =  Parent "z" "<z" "</z>" $ toMarkup p
+
+xnt p =  Parent "nx" "<nx" "</nx>" $ toMarkup p
+ynt p =  Parent "ny" "<ny" "</ny>" $ toMarkup p
+znt p =  Parent "nz" "<nz" "</nz>" $ toMarkup p
+
+v1t p = Parent "v1" "<v1" "</v1>" $ toMarkup p
+v2t p = Parent "v2" "<v2" "</v2>" $ toMarkup p
+v3t p = Parent "v3" "<v3" "</v3>" $ toMarkup p
+
 vertices :: Seq (Point3,Point3) -> Markup
 vertices = parent "vertices" . fmap (const ()) . mapM vertex
     where vertex ((P3 x y z),(P3 nx ny nz))
               = parent "vertex" $ do
                   parent "coordinates" $ do
-                                    parent "x" $ toMarkup x
-                                    parent "y" $ toMarkup y
-                                    parent "z" $ toMarkup z
+                                    xt x
+                                    yt y
+                                    zt z
                   parent "normal" $ do
-                                    parent "nx" $ toMarkup nx
-                                    parent "ny" $ toMarkup ny
-                                    parent "nz" $ toMarkup nz
-       
+                                    xnt nx
+                                    ynt ny
+                                    znt nz        
+
 volume :: [Tri] -> Markup
 volume = parent "volume" . mapM_ triangle
     where triangle (Tri a b c) 
               = parent "triangle" $ do
-                  parent "v1" $ toMarkup a
-                  parent "v2" $ toMarkup b
-                  parent "v3" $ toMarkup c
+                  v1t a
+                  v2t b
+                  v3t c
+
 
 file :: [Tri] -> Seq (Point3,Point3) -> Markup
 file tri verts = 
