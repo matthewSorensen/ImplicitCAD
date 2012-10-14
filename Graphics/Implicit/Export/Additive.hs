@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -funbox-strict-fields #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Graphics.Implicit.Export.Additive where
 
@@ -7,11 +6,14 @@ import Data.HashMap.Strict
 import Prelude hiding (lookup)
 import Control.Monad.State
 import Data.Monoid (mempty)
-import Text.Blaze.Internal
 import Text.Blaze (toMarkup)
 import Text.Blaze.Renderer.Utf8 (renderMarkup)
 import Data.ByteString.Lazy.Char8 (ByteString)
 import Codec.Compression.GZip (compress)
+import Text.Blaze.Internal (MarkupM (..))
+
+import qualified Graphics.Implicit.Export.Additive.Elements as E
+import Graphics.Implicit.Export.Additive.Elements (Markup)
 
 type Tri = (Int,Int,Int)
 type VSet = (HashMap ℝ3 Int, Int, Markup)
@@ -35,51 +37,30 @@ lookupNormedPoint (point,normal) = do
       put $! (insert point uni hash, uni+1, Append (vertex point normal) l)
       return uni
 
-parent t x = customParent (textTag t) x
-
-xt p =  Parent "x" "<x" "</x>" $ Content $ PreEscaped $ String $ show p
-yt p =  Parent "y" "<y" "</y>" $ Content $ PreEscaped $ String $ show p
-zt p =  Parent "z" "<z" "</z>" $ Content $ PreEscaped $ String $ show p
-
-xnt p =  Parent "nx" "<nx" "</nx>" $ Content $ PreEscaped $ String $ show p
-ynt p =  Parent "ny" "<ny" "</ny>" $ Content $ PreEscaped $ String $ show p
-znt p =  Parent "nz" "<nz" "</nz>" $ Content $ PreEscaped $ String $ show p
-
-v1t p = Parent "v1" "<v1" "</v1>" $ Content $ PreEscaped $ String $ show p
-v2t p = Parent "v2" "<v2" "</v2>" $ Content $ PreEscaped $ String $ show p
-v3t p = Parent "v3" "<v3" "</v3>" $ Content $ PreEscaped $ String $ show p
-
-
--- z y x nx ny nz v1 v2 v3
--- vertex coordinates normal
-
-vertices :: Markup -> Markup
-vertices = parent "vertices" 
-
 vertex :: ℝ3 -> ℝ3 -> Markup  
 vertex (x,y,z) (nx,ny,nz)
-              = parent "vertex" $ do
-                  parent "coordinates" $ do
-                                    xt x
-                                    yt y
-                                    zt z
-                  parent "normal" $ do
-                                    xnt nx
-                                    ynt ny
-                                    znt nz        
+              = E.vertex $ do
+                  E.coordinates $ do
+                    E.x x
+                    E.y y
+                    E.z z
+                  E.normal $ do
+                    E.nx nx
+                    E.ny ny
+                    E.nz nz        
 
 volume :: [Tri] -> Int -> Markup
-volume tr u = parent "volume" $ mapM_ triangle tr
+volume tr u = E.volume $ mapM_ triangle tr
     where triangle (a,b,c) 
-              = parent "triangle" $ do
-                  v1t $ u - a
-                  v2t $ u - b
-                  v3t $ u - c
+              = E.triangle $ do
+                  E.v1 $ u - a
+                  E.v2 $ u - b
+                  E.v3 $ u - c
 
 file :: ([Tri],Int,Markup) -> Markup
 file (tri,u,verts) = 
-    parent "amf" $ parent "object" $ parent "mesh" $ do
-      vertices verts
+    E.amf $ E.object $ E.mesh $ do
+      E.vertices verts
       volume tri u
 
 amf :: [NormedTriangle] -> ByteString
