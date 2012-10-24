@@ -65,3 +65,11 @@ file (tri,u,verts) =
 
 amf :: [NormedTriangle] -> ByteString
 amf = compress . renderMarkup . file . deduplicate
+
+-- * quantify performance/size loss vs. binary stl
+-- * write ganter:
+--    here's the url of my implementation
+--    we're seeing comparable slowdowns as quoted in the presentation
+--    I want the standard to implement a complete conbinator library for amf (like blaze-html),
+--    and to add more metadata support for ImplicitCAD.
+-- we should really send this from my uw email.

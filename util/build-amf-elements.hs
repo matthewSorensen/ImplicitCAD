@@ -1,4 +1,3 @@
-
 {-- 
 This script generates Graphics/Implicit/Export/Additive/Elements.hs 
 We're doing it this way for orthogonality with blaze-html and blaze-svg -
