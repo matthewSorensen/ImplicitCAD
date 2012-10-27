@@ -2,7 +2,7 @@
 module Graphics.Implicit.Export.Additive where
 
 import Graphics.Implicit.Definitions
-import Data.HashMap.Strict
+import Data.HashMap.Strict hiding (map)
 import Prelude hiding (lookup)
 import Control.Monad.State
 import Data.Monoid (mempty)
@@ -18,8 +18,14 @@ import Graphics.Implicit.Export.Additive.Elements (Markup)
 type Tri = (Int,Int,Int)
 type VSet = (HashMap ℝ3 Int, Int, Markup)
 
+reverseRunMapM :: [State a b] -> a -> ([b],a)
+reverseRunMapM lst st = run [] lst st
+    where run acc [] st = (acc,st)
+          run acc (x:xs) st = let (x',st') = runState x st
+                              in run (x':acc) xs st
+
 deduplicate :: [NormedTriangle] -> ([Tri],Int,Markup)
-deduplicate = shuffle . flip runState (mempty,0,mempty) . mapM lookupTriangle
+deduplicate = shuffle . flip reverseRunMapM (mempty,0,mempty) . map lookupTriangle
     where shuffle (triangles,(_,u,verts)) = (triangles,u-1,verts)
           lookupTriangle :: NormedTriangle -> State VSet Tri
           lookupTriangle (a,b,c) = do
