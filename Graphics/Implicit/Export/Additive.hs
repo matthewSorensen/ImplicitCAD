@@ -7,13 +7,15 @@ import Prelude hiding (lookup)
 import Control.Monad.State
 import Data.Monoid (mempty)
 import Text.Blaze (toMarkup)
-import Text.Blaze.Renderer.Utf8 (renderMarkup)
 import Data.ByteString.Lazy.Char8 (ByteString)
-import Codec.Compression.GZip (compress)
+import Data.Text (Text)
+
 import Text.Blaze.Internal (MarkupM (..))
 
-import qualified Graphics.Implicit.Export.Additive.Elements as E
-import Graphics.Implicit.Export.Additive.Elements (Markup)
+import Text.Blaze.Amf
+import qualified Text.Blaze.Amf.Elements as E
+import qualified Text.Blaze.Amf.Metadata as M
+import qualified Text.Blaze.Amf.Attributes as A
 
 type Tri = (Int,Int,Int)
 type VSet = (HashMap ℝ3 Int, Int, Markup)
@@ -22,7 +24,7 @@ reverseRunMapM :: [State a b] -> a -> ([b],a)
 reverseRunMapM lst st = run [] lst st
     where run acc [] st = (acc,st)
           run acc (x:xs) st = let (x',st') = runState x st
-                              in run (x':acc) xs st
+                              in run (x':acc) xs st'
 
 deduplicate :: [NormedTriangle] -> ([Tri],Int,Markup)
 deduplicate = shuffle . flip reverseRunMapM (mempty,0,mempty) . map lookupTriangle
@@ -47,35 +49,29 @@ vertex :: ℝ3 -> ℝ3 -> Markup
 vertex (x,y,z) (nx,ny,nz)
               = E.vertex $ do
                   E.coordinates $ do
-                    E.x x
-                    E.y y
-                    E.z z
+                    E.x $ toMarkup x
+                    E.y $ toMarkup y
+                    E.z $ toMarkup z
                   E.normal $ do
-                    E.nx nx
-                    E.ny ny
-                    E.nz nz        
+                    E.nx $ toMarkup nx
+                    E.ny $ toMarkup ny
+                    E.nz $ toMarkup nz        
 
 volume :: [Tri] -> Int -> Markup
 volume tr u = E.volume $ mapM_ triangle tr
     where triangle (a,b,c) 
               = E.triangle $ do
-                  E.v1 $ u - a
-                  E.v2 $ u - b
-                  E.v3 $ u - c
+                  E.v1 $ toMarkup $ u - a
+                  E.v2 $ toMarkup $ u - b
+                  E.v3 $ toMarkup $ u - c
 
 file :: ([Tri],Int,Markup) -> Markup
-file (tri,u,verts) = 
-    E.amf $ E.object $ E.mesh $ do
-      E.vertices verts
-      volume tri u
+file (tri,u,verts) = E.amf A.Millimeter $ do
+                       M.cad ("ImplicitCAD" :: Text)
+                       E.object $ E.mesh $ do
+                                            E.vertices verts
+                                            volume tri u
 
+-- We now must kill our compress and yell at the stupidity of the amf spec.
 amf :: [NormedTriangle] -> ByteString
-amf = compress . renderMarkup . file . deduplicate
-
--- * quantify performance/size loss vs. binary stl
--- * write ganter:
---    here's the url of my implementation
---    we're seeing comparable slowdowns as quoted in the presentation
---    I want the standard to implement a complete conbinator library for amf (like blaze-html),
---    and to add more metadata support for ImplicitCAD.
--- we should really send this from my uw email.
+amf = renderAsLBS . file . deduplicate

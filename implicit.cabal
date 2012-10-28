@@ -33,8 +33,8 @@ Library
         blaze-builder,
         storable-endian,
         JuicyPixels,
-        zlib,
-        blaze-markup
+        blaze-markup,
+        blaze-amf
         
     ghc-options:
         -O2 -optc-O3

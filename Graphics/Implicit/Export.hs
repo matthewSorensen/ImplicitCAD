@@ -25,7 +25,6 @@ import qualified Graphics.Implicit.Export.TriangleMeshFormats as TriangleMeshFor
 import qualified Graphics.Implicit.Export.NormedTriangleMeshFormats as NormedTriangleMeshFormats
 import qualified Graphics.Implicit.Export.SymbolicFormats as SymbolicFormats
 import qualified Graphics.Implicit.Export.Additive as Additive
-import qualified Graphics.Implicit.Export.OldAdditive as OldAdditive
 
 import qualified Codec.Picture as ImageFormatCodecs
 
